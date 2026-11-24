@@ -15,10 +15,10 @@ function penta(step: number, octave = 0): number {
 }
 
 export class AudioEngine {
-  private ctx: AudioContext | null = null;
-  private master: GainNode | null = null;
+  protected ctx: AudioContext | null = null;
+  protected master: GainNode | null = null;
   private humNodes: { osc: OscillatorNode; gain: GainNode } | null = null;
-  private noiseBuf: AudioBuffer | null = null;
+  protected noiseBuf: AudioBuffer | null = null;
   muted = false;
 
   constructor() {
@@ -61,7 +61,7 @@ export class AudioEngine {
     }
   }
 
-  private tone(
+  protected tone(
     freq: number,
     dur: number,
     type: OscillatorType,
@@ -84,7 +84,7 @@ export class AudioEngine {
     osc.stop(t0 + dur + 0.05);
   }
 
-  private noise(dur: number, vol: number, filterFreq: number, when = 0, sweepTo?: number) {
+  protected noise(dur: number, vol: number, filterFreq: number, when = 0, sweepTo?: number) {
     if (!this.ctx || !this.master || !this.noiseBuf) return;
     const t0 = this.ctx.currentTime + when;
     const src = this.ctx.createBufferSource();

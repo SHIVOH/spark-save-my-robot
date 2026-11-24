@@ -46,28 +46,28 @@ const GATE_MIN_CHARGE = 25; // sunset crossing: arrive with charge to spare
 const TRAIL_IDLE_DELAY = 30; // s of no progress -> guidance trail fades in
 const HINT_IDLE_DELAY = 45; // s idle -> hint pulse
 
-const AMBER = new THREE.Color('#ffb020');
-const AMBER_DEEP = new THREE.Color('#e08900');
-const CYAN = new THREE.Color('#37e0e6');
-const ORANGE = new THREE.Color('#ff7a1a');
+export const AMBER = new THREE.Color('#ffb020');
+export const AMBER_DEEP = new THREE.Color('#e08900');
+export const CYAN = new THREE.Color('#37e0e6');
+export const ORANGE = new THREE.Color('#ff7a1a');
 
 // ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
-function clamp(v: number, a: number, b: number) {
+export function clamp(v: number, a: number, b: number) {
   return Math.max(a, Math.min(b, v));
 }
-function lerp(a: number, b: number, t: number) {
+export function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
-function damp(rate: number, dt: number) {
+export function damp(rate: number, dt: number) {
   return 1 - Math.exp(-dt / rate);
 }
-function easeInOut(t: number) {
+export function easeInOut(t: number) {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 // deterministic rng for scatter
-function mulberry(seed: number) {
+export function mulberry(seed: number) {
   let a = seed;
   return () => {
     a |= 0;
@@ -91,7 +91,7 @@ interface Particle {
   gravity: number;
 }
 
-class ParticleSystem {
+export class ParticleSystem {
   points: THREE.Points;
   private parts: Particle[] = [];
   private positions: Float32Array;
@@ -186,13 +186,13 @@ class ParticleSystem {
 // ---------------------------------------------------------------------------
 // Bloom-aware material registry: dormant world desaturated -> full bloom
 // ---------------------------------------------------------------------------
-interface BloomMat {
+export interface BloomMat {
   mat: THREE.MeshStandardMaterial;
   full: THREE.Color;
   dormant: THREE.Color;
 }
 
-function dormantOf(c: THREE.Color): THREE.Color {
+export function dormantOf(c: THREE.Color): THREE.Color {
   const hsl = { h: 0, s: 0, l: 0 };
   c.getHSL(hsl);
   const d = new THREE.Color();
@@ -203,7 +203,7 @@ function dormantOf(c: THREE.Color): THREE.Color {
 // ---------------------------------------------------------------------------
 // Procedural art factories (low-poly, flat-shaded, rounded silhouettes)
 // ---------------------------------------------------------------------------
-function std(color: string | THREE.Color, opts: Partial<THREE.MeshStandardMaterialParameters> = {}) {
+export function std(color: string | THREE.Color, opts: Partial<THREE.MeshStandardMaterialParameters> = {}) {
   return new THREE.MeshStandardMaterial({
     color,
     roughness: 0.85,
@@ -213,7 +213,7 @@ function std(color: string | THREE.Color, opts: Partial<THREE.MeshStandardMateri
   });
 }
 
-function regBloom(reg: BloomMat[], mat: THREE.MeshStandardMaterial) {
+export function regBloom(reg: BloomMat[], mat: THREE.MeshStandardMaterial) {
   reg.push({ mat, full: mat.color.clone(), dormant: dormantOf(mat.color) });
 }
 
@@ -297,7 +297,7 @@ function makeHarvester(
   return { group: g, panel, glowMat, pos: new THREE.Vector3(x, 0, z), wakeK: 0, wakeTarget: 0 };
 }
 
-function makeTree(scene: THREE.Scene, reg: BloomMat[], x: number, z: number, s: number, leaf: string) {
+export function makeTree(scene: THREE.Scene, reg: BloomMat[], x: number, z: number, s: number, leaf: string) {
   const g = new THREE.Group();
   const trunkMat = std('#8a6844');
   regBloom(reg, trunkMat);
@@ -386,7 +386,7 @@ export interface KidRig {
   armR: THREE.Group;
 }
 
-function makeKid(): KidRig {
+export function makeKid(): KidRig {
   const g = new THREE.Group();
   const suit = std('#3f7fbf');
   const skin = std('#f2c49b');
@@ -435,7 +435,7 @@ export interface BoltRig {
   head: THREE.Group;
 }
 
-function makeBolt(): BoltRig {
+export function makeBolt(): BoltRig {
   const g = new THREE.Group();
   // rounded homemade chassis — mismatched warm panels, zero sharp angles
   const bodyMat = std('#ffc44d', { roughness: 0.6, metalness: 0.25 });
