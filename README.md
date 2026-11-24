@@ -1,74 +1,54 @@
-# React + TypeScript + Vite
+# SPARK: Save My Robot
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**A game where a curious kid saves their dying robot — by learning real robotics.**
 
-Currently, two official plugins are available:
+![Gameplay](docs/screenshot-gameplay.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Bolt the robot is running out of charge. Explore an open world, harvest energy,
+wire real circuits, and learn how robots sense, think, and act — one quest at a
+time. Built for kids aged 6–14.
 
-## React Compiler
+## Status: Zone 1 vertical slice
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Zone 1 — *Meadow of Beginnings* — is playable end to end:
 
-## Expanding the ESLint configuration
+- **First Light** — follow the amber trail and charge the first flower
+- **Snack-Bar Hunt** — collect 5 charge cells scattered across the meadow
+- **The Tether** — wire a real circuit (out *and* back!) to wake the harvester
+- **Dyna's Patrol** — visit 4 patrol stations with Dyna the drone
+- **Sunset Crossing** — predict your charge, carry the lantern, cross the gate
+- **Bolt's Reboot** — the ceremony, and a new move: **charge-dash**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+A playtest link is shared privately with testers during this phase.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Run it locally
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # dev server
+npm run build    # production build -> dist/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Works on desktop (WASD / arrows / Shift) and touch (floating joystick,
+tap-to-move, dash button).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Tech
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- TypeScript + React 19 + Vite
+- Three.js (raw game loop, procedural low-poly world — no game engine)
+- WebAudio-synthesized sound (no audio assets)
+- Tailwind CSS + shadcn/ui for the HUD
+
+## Project layout
+
 ```
-# spark-save-my-robot
+src/game/engine.ts   # the whole game: quests, wiring, energy, companions
+src/game/audio.ts    # synthesized sound effects
+src/pages/Home.tsx   # React HUD + touch input layer
+```
+
+## Roadmap
+
+1. Playtest Zone 1 with kids, iterate on feedback
+2. Zones 2+ — new robotics concepts per the game design document
+3. Native iOS/Android build
