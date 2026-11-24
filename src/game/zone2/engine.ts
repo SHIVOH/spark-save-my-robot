@@ -444,7 +444,7 @@ export class Zone2Engine {
   private pingsFired = 0;
   private caveK = 0;
   private cart!: { group: THREE.Group; lampMat: THREE.MeshStandardMaterial };
-  private cartState: 'idle' | 'rolling' | 'braking' | 'returning' = 'idle';
+  private cartState: 'idle' | 'rolling' | 'braking' | 'returning' | 'stopped' = 'idle';
   private cartX = CART_START_X;
   private cartSpeed = 0;
   private cartThreshold = 4;
@@ -1646,6 +1646,7 @@ export class Zone2Engine {
       this.setReading('SAFE');
       this.watchCart = false;
       this.noProgressT = 0;
+      this.cartState = 'stopped';
       this.setQuest(3);
     } else if (dist > 5) {
       this.setHud({ hint: 'Stopped too far — try a smaller number' });
