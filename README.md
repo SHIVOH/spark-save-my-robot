@@ -27,14 +27,14 @@ Zone 1 — *Meadow of Beginnings* — energy and circuits:
 - **First Light** — follow the amber trail and charge the first flower
 - **Snack-Bar Hunt** — collect 5 charge cells scattered across the meadow
 - **The Tether** — wire a real circuit (out *and* back!) to wake the harvester
-- **Dyna's Patrol** — visit 4 patrol stations with Dyna the drone
+- **Dyna's Patrol** — visit Dyna's 4 charge stations
 - **Sunset Crossing** — predict your charge, carry the lantern, cross the gate
 - **Bolt's Reboot** — the ceremony, and a new move: **charge-dash**
 
 Zone 2 — *Sensor Gardens* — how robots sense the world (unlocks after Zone 1):
 
 - **Morning Bloom** — analog light: flowers bloom by *how much* light they get
-- **Bat Hollow** — ultrasonic echolocation + distance thresholds (minecart!)
+- **Bat Hollow** — ultrasonic echolocation + a brake rule for two minecarts
 - **Vine Crossing** — binary touch: felt vine or not?
 - **Flicker's Jitters** — noise vs signal: tune out false positives
 - **The Right Eyes** — pick the right sensor for each obstacle

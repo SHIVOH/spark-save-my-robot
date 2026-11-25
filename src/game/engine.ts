@@ -662,6 +662,7 @@ export class GameEngine {
   private dragCable: THREE.Mesh | null = null;
   private dragPoint = new THREE.Vector3();
   private hoverPort: WirePort | null = null;
+  private hintPort: WirePort | null = null; // the port the wrong-attempt hint points at
   private wireAttempts = 0;
   private tetherDone = false;
   private lampOn = false;
@@ -1007,7 +1008,9 @@ export class GameEngine {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     this.audio.chargeHumStop();
+    this.audio.dispose();
     this.renderer.dispose();
+    this.renderer.forceContextLoss(); // free the WebGL context when switching zones
   }
 
   setJoystick(x: number, y: number) {
@@ -1244,6 +1247,7 @@ export class GameEngine {
       // correct pair: connect
       from.connected = true;
       target.connected = true;
+      this.hintPort = null;
       this.connectCable(from, target);
       this.hitStop = 0.06; // 60ms hit-stop on major connection (canon)
       this.audio.snapChime();
@@ -1271,9 +1275,10 @@ export class GameEngine {
       if (this.wireAttempts === 2) {
         // outline the correct port
         const mate = this.ports.find((p) => p.pairId === from.id);
-        if (mate) mate.mat.emissiveIntensity = 2.6;
+        this.hintPort = mate ?? null;
         this.setHud({ hint: 'The glowing port fits!' });
       } else if (this.wireAttempts >= 3) {
+        this.hintPort = this.ports.find((p) => p.pairId === from.id) ?? null;
         this.setHud({ hint: 'Bolt points at the bright port' });
         this.audio.chirp(true);
       }
@@ -1500,7 +1505,7 @@ export class GameEngine {
       !this.hud.dashUnlocked && (this.keys.has('shift') || (this.joyActive && this.joy.length() > 0.92));
     this.dashCd = Math.max(0, this.dashCd - dt);
 
-    let desired = new THREE.Vector3();
+    const desired = new THREE.Vector3();
     if (this.dashT > 0) {
       this.dashT -= dt;
       desired.copy(this.dashDir).multiplyScalar(DASH_SPEED);
@@ -1889,7 +1894,7 @@ export class GameEngine {
       this.setHud({
         dashUnlocked: true,
         banner: 'New move: CHARGE-DASH!',
-        hint: 'Double-Double-tap a direction, or press Shift',
+        hint: 'Double-tap a direction, or press Shift',
       });
       this.audio.stinger(3);
       window.setTimeout(() => this.clearBanner(), 2600);
@@ -2016,10 +2021,19 @@ export class GameEngine {
     }
     // wiring ports pulse; hovered port blooms
     for (const port of this.ports) {
-      if (port.connected) continue;
+      if (port.connected) {
+        port.mesh.scale.setScalar(1);
+        continue;
+      }
       const base = port.pairId ? 1.1 : 0.35;
       port.mat.emissiveIntensity =
-        port === this.hoverPort ? 3.0 : base + Math.sin(this.time * 5.2 + port.pos.x) * 0.4;
+        port === this.hoverPort
+          ? 3.0
+          : port === this.hintPort
+            ? 3.2 + Math.sin(this.time * 9) * 1.2 // unmistakably brighter than the rest
+            : base + Math.sin(this.time * 5.2 + port.pos.x) * 0.4;
+      const hs = port === this.hintPort ? 1.5 + Math.sin(this.time * 9) * 0.2 : 1;
+      port.mesh.scale.setScalar(hs);
     }
     if (this.dragPort) this.updateDragCable();
     // current flows along connected cables (~visible liquid pulses; return dimmed)

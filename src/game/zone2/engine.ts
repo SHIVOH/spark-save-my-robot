@@ -64,6 +64,14 @@ const DRAIN_IDLE = 0.02;
 const WORLD_RADIUS = 82;
 const GLOBE_RANGE = 9.5; // light-globe reach for flower meters
 const HINT_IDLE_DELAY = 45;
+const CART_SAFE_MIN = 2; // safe stop window, metres from the drop edge
+const CART_SAFE_MAX = 5;
+const CART_BRAKE = 9; // braking deceleration (m/s^2)
+// two rounds: the second cart is faster, so it needs more room to stop
+const CART_ROUNDS = [{ speed: 4.5 }, { speed: 9 }];
+const CART_SLIDER_MAX = 12;
+const DUSK_PEAK = 78; // how high the true dusk signal climbs on the startle meter
+const PLAZA_STAY_R = 14;
 const TRAIL_IDLE_DELAY = 30;
 
 // ---------------------------------------------------------------------------
@@ -80,11 +88,12 @@ const BLOOM_POS: [number, number][] = [
   [13, 32],
   [22, 33],
 ];
-const RAVINE = { zMin: 22, zMax: 29, xMin: -34, xMax: 34, bridgeX: 4, bridgeHalf: 3 };
+// the ravine spans the whole valley floor, so the petal bridge is the only way across
+const RAVINE = { zMin: 22, zMax: 29, xMin: -96, xMax: 96, bridgeX: 4, bridgeHalf: 3 };
 const CAVE_POS = new THREE.Vector3(-38, 0, -8); // Bat Hollow center
 const CAVE_R = 17;
 const CAVE_ENTRY = new THREE.Vector3(-30, 0, 0);
-const CART_START_X = -50;
+const CART_START_X = -52;
 const CART_EDGE_X = -28; // broken track / drop edge
 const CART_Z = -12;
 const CART_CONSOLE = new THREE.Vector3(-44, 0, -7);
@@ -384,7 +393,7 @@ export class Zone2Engine {
   // per-frame values read directly by the React rAF loop (bypass re-renders)
   readingText = ''; // cyan chest chip (distance number etc.)
   calmStartle = 0; // Flicker's live startle meter 0..100
-  calmThreshold = 55; // player-set calm threshold 0..100
+  calmThreshold = 30; // player-set calm threshold 0..100 (starts too low on purpose)
 
   private canvas: HTMLCanvasElement;
   private hudCb: (h: Zone2HudState) => void;
@@ -411,7 +420,7 @@ export class Zone2Engine {
     sensorStage: 'pick',
     sensorObstacle: 0,
     sliderOpen: false,
-    sliderValue: 4,
+    sliderValue: 1,
     calmMode: false,
     banner: null,
     complete: false,
@@ -447,7 +456,8 @@ export class Zone2Engine {
   private cartState: 'idle' | 'rolling' | 'braking' | 'returning' | 'stopped' = 'idle';
   private cartX = CART_START_X;
   private cartSpeed = 0;
-  private cartThreshold = 4;
+  private cartThreshold = 1; // starts too small on purpose: the first roll teaches
+  private cartRound = 0;
   private cartRattleT = 0;
   private vines: Vine[] = [];
   private vineStep = 0;
@@ -686,7 +696,7 @@ export class Zone2Engine {
     const pitMat = std('#26343a');
     const pit = new THREE.Mesh(new THREE.PlaneGeometry(w, d), pitMat);
     pit.rotation.x = -Math.PI / 2;
-    pit.position.set(cx, -2.6, cz);
+    pit.position.set(cx, 0.1, cz); // the ground disc has no hole: draw the chasm on top of it
     this.scene.add(pit);
     const wallMat = std('#5a6a5a');
     regBloom(this.bloomMats, wallMat);
@@ -702,7 +712,7 @@ export class Zone2Engine {
     for (let i = 0; i < 5; i++) {
       const plank = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, 0.24, 8), plankMat);
       plank.scale.set(1, 1, 0.62);
-      plank.position.set(RAVINE.bridgeX, 0.12, RAVINE.zMin + 0.9 + i * 1.35);
+      plank.position.set(RAVINE.bridgeX, 0.2, RAVINE.zMin + 0.9 + i * 1.35);
       plank.castShadow = true;
       this.petalBridge.add(plank);
     }
@@ -785,8 +795,16 @@ export class Zone2Engine {
     }
     const drop = new THREE.Mesh(new THREE.PlaneGeometry(8, 10), std('#1c242c'));
     drop.rotation.x = -Math.PI / 2;
-    drop.position.set(CART_EDGE_X + 4, -2.8, CART_Z);
+    drop.position.set(CART_EDGE_X + 4.6, 0.1, CART_Z);
     this.scene.add(drop);
+    // the safe stop zone, painted on the track (everything visible)
+    const safe = new THREE.Mesh(
+      new THREE.PlaneGeometry(CART_SAFE_MAX - CART_SAFE_MIN, 1.9),
+      new THREE.MeshBasicMaterial({ color: '#3ddc84', transparent: true, opacity: 0.55, depthWrite: false }),
+    );
+    safe.rotation.x = -Math.PI / 2;
+    safe.position.set(CART_EDGE_X - (CART_SAFE_MIN + CART_SAFE_MAX) / 2, 0.11, CART_Z);
+    this.scene.add(safe);
     // soft bumper right at the edge (no fail states: it catches the cart)
     const bumper = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.9, 1.6),
@@ -819,7 +837,7 @@ export class Zone2Engine {
     const cz = (GORGE.zMin + GORGE.zMax) / 2;
     const pit = new THREE.Mesh(new THREE.PlaneGeometry(w, d), std('#22303a'));
     pit.rotation.x = -Math.PI / 2;
-    pit.position.set(cx, -5.2, cz);
+    pit.position.set(cx, 0.1, cz);
     this.scene.add(pit);
     const wallMat = std('#6a7a6a');
     regBloom(this.bloomMats, wallMat);
@@ -1114,7 +1132,7 @@ export class Zone2Engine {
       obj.userData.interactId = id;
       return it;
     };
-    add('globe', GLOBE_POS, 3.4, this.globe.group, this.globe.glowMat);
+    add('globe', this.globe.group.position, 3.4, this.globe.group, this.globe.glowMat);
     add('flicker', this.flicker.group.position, 3.6, this.flicker.group, this.flicker.tailMat);
     add('bolt', this.bolt.group.position, 2.8, this.bolt.group, this.bolt.coreMat);
     add('cart', CART_CONSOLE, 3.6, this.cart.group, this.cart.lampMat);
@@ -1163,7 +1181,9 @@ export class Zone2Engine {
     window.removeEventListener('resize', this.resize);
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
+    this.audio.dispose();
     this.renderer.dispose();
+    this.renderer.forceContextLoss(); // free the WebGL context when switching zones
   }
 
   setJoystick(x: number, y: number) {
@@ -1195,6 +1215,7 @@ export class Zone2Engine {
     });
     window.setTimeout(() => this.clearBanner(), 2400);
     this.audio.stinger(2);
+    if (i >= 1 && i <= 6) this.setHud({ boltHope: Math.min(0.9, 0.3 + i * 0.1) });
     if (i === 3) {
       // Bolt can't swing vines — he cheerfully takes the long way around
       this.boltDetour = [
@@ -1237,7 +1258,8 @@ export class Zone2Engine {
     if (!this.hud.started || this.hud.complete) return;
     this.scanCd = 1.6;
     this.audio.scanPing();
-    this.spawnRing(this.bolt.group.position.clone(), 26, 16, 0.9);
+    const origin = this.boltResting ? this.kid.group.position : this.bolt.group.position;
+    this.spawnRing(origin.clone(), 26, 16, 0.9);
     const glyphs: [string, string][] = [
       ['flower', '❀'],
       ['globe', '●'],
@@ -1250,7 +1272,7 @@ export class Zone2Engine {
     let used = 0;
     for (const it of this.interactables) {
       if (!it.enabled || used >= this.tags.length) continue;
-      if (this.bolt.group.position.distanceTo(it.pos) > 24) continue;
+      if (origin.distanceTo(it.pos) > 24) continue;
       const tag = this.tags[used++];
       const glyph = glyphs.find(([pre]) => it.id.startsWith(pre))?.[1] ?? '✚';
       drawTag(tag, glyph);
@@ -1262,7 +1284,7 @@ export class Zone2Engine {
 
   // ---- quest 2: minecart slider (React modal drives these) -----------------
   setCartThreshold(v: number) {
-    this.cartThreshold = clamp(Math.round(v), 1, 8);
+    this.cartThreshold = clamp(Math.round(v), 1, CART_SLIDER_MAX);
     this.setHud({ sliderValue: this.cartThreshold });
   }
 
@@ -1524,6 +1546,12 @@ export class Zone2Engine {
           this.audio.knock();
           break;
         }
+        // the first swing starts from the ledge: walk there, then swing
+        if (!this.onVine && this.kid.group.position.distanceTo(VINE_START) > 3.5) {
+          this.moveTarget = VINE_START.clone();
+          this.pendingInteract = it;
+          break;
+        }
         this.startSwing(it.pos, correct);
         break;
       }
@@ -1594,7 +1622,7 @@ export class Zone2Engine {
 
   private startCartRun() {
     this.cartState = 'rolling';
-    this.cartSpeed = 4.5;
+    this.cartSpeed = CART_ROUNDS[this.cartRound].speed;
     this.cartX = CART_START_X;
     this.watchCart = true;
     this.audio.chirp(true);
@@ -1617,7 +1645,7 @@ export class Zone2Engine {
         this.audio.cartBrake();
       }
     } else if (this.cartState === 'braking') {
-      this.cartSpeed = Math.max(0, this.cartSpeed - 9 * dt);
+      this.cartSpeed = Math.max(0, this.cartSpeed - CART_BRAKE * dt);
       this.cartX += this.cartSpeed * dt;
       const dist = Math.max(0, CART_EDGE_X - this.cartX);
       this.setReading(`${Math.round(dist)}m`);
@@ -1639,24 +1667,32 @@ export class Zone2Engine {
   }
 
   private judgeCart(dist: number) {
-    if (dist >= 2 && dist <= 5) {
-      // stopped safely at the threshold — threshold understood!
+    if (dist >= CART_SAFE_MIN && dist <= CART_SAFE_MAX) {
+      // stopped inside the green zone
       this.audio.stinger(3);
       this.particles.burst(this.cart.group.position.clone().setY(1.4), CYAN, 30, 4, 4);
-      this.setReading('SAFE');
-      this.watchCart = false;
       this.noProgressT = 0;
-      this.cartState = 'stopped';
-      this.setQuest(3);
-    } else if (dist > 5) {
-      this.setHud({ hint: 'Stopped too far — try a smaller number' });
+      if (this.cartRound < CART_ROUNDS.length - 1) {
+        // transfer: a faster cart needs more room — the old number no longer works
+        this.cartRound++;
+        this.cartState = 'returning';
+        this.setHud({ banner: 'Now a faster cart!', hint: 'Faster carts need more room to stop' });
+        window.setTimeout(() => this.clearBanner(), 2200);
+      } else {
+        this.setReading('SAFE');
+        this.watchCart = false;
+        this.cartState = 'stopped';
+        this.setQuest(3);
+      }
+    } else if (dist > CART_SAFE_MAX) {
+      this.setHud({ hint: `Stopped ${Math.round(dist)} m short of green — smaller number` });
       this.audio.chirp(false);
       this.cartState = 'returning';
     } else {
-      // rolled right to the soft bumper — too close, gently try again
+      // rolled past the green zone toward the soft bumper — gently try again
       this.audio.softBump();
       this.particles.burst(this.cart.group.position.clone().setY(1), ORANGE, 16, 3, 3);
-      this.setHud({ hint: 'Whoa, too close! Bigger number' });
+      this.setHud({ hint: 'Too late! It keeps rolling while it brakes — bigger number' });
       this.cartState = 'returning';
     }
   }
@@ -1733,6 +1769,18 @@ export class Zone2Engine {
   // -------------------------------------------------------------------------
   private updateJitters(dt: number) {
     if (!this.jitterActive) return;
+    // Flicker only settles while Spark stays with him in the plaza
+    if (this.kid.group.position.distanceTo(PLAZA_POS) > PLAZA_STAY_R) {
+      this.calmT = 0;
+      this.startleTarget = 8;
+      this.calmStartle = lerp(this.calmStartle, this.startleTarget, damp(0.35, dt));
+      if (this.jitterPhase === 'dusk') {
+        this.jitterPhase = 'clouds';
+        this.duskK = 0;
+      }
+      if (!this.hud.hint) this.setHud({ hint: 'Flicker needs you — stay in the plaza' });
+      return;
+    }
     this.jitterT += dt;
     if (this.jitterPhase === 'clouds') {
       // noise: cloud shadows drift over the plaza every few seconds
@@ -1776,7 +1824,7 @@ export class Zone2Engine {
     } else {
       // dusk: the true signal ramps up
       this.duskK = clamp(this.duskK + dt / 5, 0, 1);
-      this.startleTarget = 8 + this.duskK * 90;
+      this.startleTarget = 8 + this.duskK * (DUSK_PEAK - 8);
       this.shadowBlobs.forEach((b) => {
         const m = b.material as THREE.MeshBasicMaterial;
         m.opacity = lerp(m.opacity, 0, damp(0.4, dt));
@@ -1813,7 +1861,7 @@ export class Zone2Engine {
       case 0:
         return FLICKER_MEET;
       case 1: {
-        if (!this.globeCarried) return GLOBE_POS;
+        if (!this.globeCarried) return this.globe.group.position;
         let best: BloomFlower | null = null;
         let bd = Infinity;
         for (const f of this.bloomFlowers) {
@@ -2121,8 +2169,11 @@ export class Zone2Engine {
       return;
     }
 
+    const prevX = pos.x;
     const prevZ = pos.z;
-    const inp = this.moveInput();
+    // hanging on a vine: no walking on air — the next move is a swing
+    const inp = this.onVine ? new THREE.Vector2() : this.moveInput();
+    if (this.onVine) this.moveTarget = null;
     const tired = this.gauge <= 0;
 
     const desired = new THREE.Vector3();
@@ -2144,7 +2195,7 @@ export class Zone2Engine {
         if (this.pendingInteract) {
           const it = this.pendingInteract;
           this.pendingInteract = null;
-          if (pos.distanceTo(it.pos) < it.radius + 1.2) this.doInteract(it);
+          if (pos.distanceTo(it.pos) < it.radius + 1.2 || it.id.startsWith('vine:')) this.doInteract(it);
         }
       } else {
         const speed = tired ? WALK_SPEED * 0.7 : WALK_SPEED;
@@ -2163,21 +2214,23 @@ export class Zone2Engine {
       pos.z *= WORLD_RADIUS / r;
     }
 
-    // world blocking: the ravine (until the petal bridge) and the gorge
+    // world blocking: the ravine (until the petal bridge), the gorge, and
+    // the greenhouse obstacles Bolt cannot pass yet
     if (pos.y < 0.4) {
-      const inRavineZ = pos.z > RAVINE.zMin && pos.z < RAVINE.zMax;
-      const inRavineX = pos.x > RAVINE.xMin && pos.x < RAVINE.xMax;
-      if (inRavineZ && inRavineX) {
-        const onBridge = this.bridgeOpen && Math.abs(pos.x - RAVINE.bridgeX) < RAVINE.bridgeHalf;
-        if (!onBridge) {
-          pos.z = prevZ <= RAVINE.zMin ? RAVINE.zMin : RAVINE.zMax;
-        }
-      }
-      if (!this.onVine) {
-        const inGorgeZ = pos.z > GORGE.zMin && pos.z < GORGE.zMax;
-        const inGorgeX = pos.x > GORGE.xMin && pos.x < GORGE.xMax;
-        if (inGorgeZ && inGorgeX) {
-          pos.z = prevZ <= GORGE.zMax - (GORGE.zMax - GORGE.zMin) / 2 ? GORGE.zMax : GORGE.zMin;
+      const onBridge = this.bridgeOpen && Math.abs(pos.x - RAVINE.bridgeX) < RAVINE.bridgeHalf;
+      if (!onBridge) this.blockRect(pos, prevX, prevZ, RAVINE);
+      if (!this.onVine) this.blockRect(pos, prevX, prevZ, GORGE);
+    }
+    if (this.quest <= 5) {
+      for (let i = 0; i < OBSTACLES.length; i++) {
+        if (this.obstacleCleared[i]) continue;
+        const o = OBSTACLES[i].pos;
+        const dx = pos.x - o.x;
+        const dz = pos.z - o.z;
+        const d = Math.hypot(dx, dz);
+        if (d < 2.4 && d > 0.001) {
+          pos.x = o.x + (dx / d) * 2.4;
+          pos.z = o.z + (dz / d) * 2.4;
         }
       }
     }
@@ -2221,6 +2274,22 @@ export class Zone2Engine {
       this.kid.legR.rotation.x = lerp(this.kid.legR.rotation.x, 0, damp(0.1, dt));
     }
     this.kid.group.rotation.y = this.facing;
+  }
+
+  /** Keep the kid out of a rectangular chasm: stop at the edge they came from. */
+  private blockRect(
+    pos: THREE.Vector3,
+    prevX: number,
+    prevZ: number,
+    r: { xMin: number; xMax: number; zMin: number; zMax: number },
+  ) {
+    if (pos.x <= r.xMin || pos.x >= r.xMax || pos.z <= r.zMin || pos.z >= r.zMax) return;
+    if (prevZ <= r.zMin) pos.z = r.zMin;
+    else if (prevZ >= r.zMax) pos.z = r.zMax;
+    else if (prevX <= r.xMin) pos.x = r.xMin;
+    else if (prevX >= r.xMax) pos.x = r.xMax;
+    else pos.z = pos.z - r.zMin < r.zMax - pos.z ? r.zMin : r.zMax; // landed inside: nearest rim
+    this.vel.set(0, 0, 0);
   }
 
   private updateEnergy(dt: number) {
@@ -2397,7 +2466,7 @@ export class Zone2Engine {
       const to = target.clone().sub(b.position.clone().setY(0));
       const d = to.length();
       if (d > 0.3 && this.bumpT < 0) {
-        const speed = Math.min(d * 2.2, hope > 0.6 ? 8.5 : 4.2);
+        const speed = Math.min(d * 2.2, hope > 0.6 ? 8.5 : 7.4); // always a touch faster than Spark walks
         b.position.addScaledVector(to.normalize(), Math.min(d, speed * dt));
         b.rotation.y = Math.atan2(to.x, to.z);
       }

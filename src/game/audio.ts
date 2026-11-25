@@ -49,6 +49,13 @@ export class AudioEngine {
     if (this.ctx.state === 'suspended') void this.ctx.resume();
   }
 
+  /** Release the AudioContext (browsers cap how many can be open). */
+  dispose() {
+    if (this.ctx && this.ctx.state !== 'closed') void this.ctx.close();
+    this.ctx = null;
+    this.master = null;
+  }
+
   setMuted(m: boolean) {
     this.muted = m;
     try {
