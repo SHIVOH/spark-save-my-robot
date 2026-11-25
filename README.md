@@ -8,9 +8,21 @@ Bolt the robot is running out of charge. Explore an open world, harvest energy,
 wire real circuits, and learn how robots sense, think, and act — one quest at a
 time. Built for kids aged 6–14.
 
-## Status: Zone 1 vertical slice
+## ▶ Play it now
 
-Zone 1 — *Meadow of Beginnings* — is playable end to end:
+**https://shivoh.github.io/spark-save-my-robot/** — runs right in your browser
+(desktop or phone), no install. Progress saves locally on your device.
+
+## Give feedback
+
+Played it? We'd love to hear from you — especially if you're a kid or
+played with one! Open a
+[playtest feedback issue](https://github.com/SHIVOH/spark-save-my-robot/issues/new)
+and tell us: what was fun, what was confusing, where you got stuck.
+
+## Status: Zones 1–2 playable
+
+Zone 1 — *Meadow of Beginnings* — energy and circuits:
 
 - **First Light** — follow the amber trail and charge the first flower
 - **Snack-Bar Hunt** — collect 5 charge cells scattered across the meadow
@@ -19,7 +31,14 @@ Zone 1 — *Meadow of Beginnings* — is playable end to end:
 - **Sunset Crossing** — predict your charge, carry the lantern, cross the gate
 - **Bolt's Reboot** — the ceremony, and a new move: **charge-dash**
 
-A playtest link is shared privately with testers during this phase.
+Zone 2 — *Sensor Gardens* — how robots sense the world (unlocks after Zone 1):
+
+- **Morning Bloom** — analog light: flowers bloom by *how much* light they get
+- **Bat Hollow** — ultrasonic echolocation + distance thresholds (minecart!)
+- **Vine Crossing** — binary touch: felt vine or not?
+- **Flicker's Jitters** — noise vs signal: tune out false positives
+- **The Right Eyes** — pick the right sensor for each obstacle
+- **Bolt's Eyes Open** — the ceremony, and a new move: **scan-ping**
 
 ## Run it locally
 
@@ -49,6 +68,6 @@ src/pages/Home.tsx   # React HUD + touch input layer
 
 ## Roadmap
 
-1. Playtest Zone 1 with kids, iterate on feedback
-2. Zones 2+ — new robotics concepts per the game design document
+1. Playtest Zones 1–2 with kids, iterate on feedback ← **we are here**
+2. Zones 3+ — new robotics concepts per the game design document
 3. Native iOS/Android build
