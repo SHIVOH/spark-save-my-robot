@@ -7,6 +7,7 @@ import {
   BatteryMedium,
   Cable,
   Flag,
+  Home as HomeIcon,
   Lightbulb,
   MapPin,
   Play,
@@ -51,7 +52,7 @@ interface JoyState {
   dy: number;
 }
 
-export default function Zone1Game({ onExit }: { onExit?: () => void }) {
+export default function Zone1Game({ onExit, onNext }: { onExit?: () => void; onNext?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const gaugeRef = useRef<HTMLDivElement>(null);
@@ -232,7 +233,7 @@ export default function Zone1Game({ onExit }: { onExit?: () => void }) {
           </div>
 
           {/* quest card: icon + <=5 words */}
-          <div className="pointer-events-none fixed left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-black/35 px-4 py-2 backdrop-blur-sm">
+          <div className="pointer-events-none fixed left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-black/35 px-4 py-2 backdrop-blur-sm max-sm:left-auto max-sm:right-4 max-sm:top-[4.5rem] max-sm:translate-x-0">
             <QuestIcon className="h-6 w-6 text-amber-300" />
             <div className="text-white">
               <div className="text-xs font-semibold uppercase tracking-wide text-amber-200/80">
@@ -272,6 +273,16 @@ export default function Zone1Game({ onExit }: { onExit?: () => void }) {
           >
             {muted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
           </button>
+
+          {/* back to the zone picker — only in free play, so a stray tap can't lose a run */}
+          {onExit && hud.questIndex >= 6 && (
+            <button
+              onClick={onExit}
+              className="fixed right-20 top-4 z-30 flex items-center gap-1.5 rounded-full bg-black/35 px-4 py-3 text-sm font-black text-white backdrop-blur-sm transition-transform active:scale-90"
+            >
+              <HomeIcon className="h-5 w-5" /> Zones
+            </button>
+          )}
 
           {/* hint bubble */}
           {hud.hint && (
@@ -385,12 +396,27 @@ export default function Zone1Game({ onExit }: { onExit?: () => void }) {
             <p className="mt-1 text-sm font-bold text-amber-600">
               Vertical Slice complete — thanks for playing!
             </p>
-            <button
-              onClick={() => engineRef.current?.resumeFreePlay()}
-              className="mt-6 rounded-full bg-amber-400 px-8 py-4 text-lg font-black text-amber-950 shadow-xl transition-transform hover:scale-105 active:scale-95"
-            >
-              Keep exploring with charge-dash
-            </button>
+            <div className="mt-6 flex flex-col items-center gap-3">
+              {onNext && (
+                <button
+                  onClick={onNext}
+                  className="rounded-full bg-cyan-400 px-8 py-4 text-lg font-black text-cyan-950 shadow-xl transition-transform hover:scale-105 active:scale-95"
+                >
+                  Next: Zone 2 — Sensor Gardens
+                </button>
+              )}
+              <button
+                onClick={() => engineRef.current?.resumeFreePlay()}
+                className="rounded-full bg-amber-400 px-8 py-4 text-lg font-black text-amber-950 shadow-xl transition-transform hover:scale-105 active:scale-95"
+              >
+                Keep exploring with charge-dash
+              </button>
+              {onExit && (
+                <button onClick={onExit} className="text-sm font-black text-amber-800 underline">
+                  Back to zones
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

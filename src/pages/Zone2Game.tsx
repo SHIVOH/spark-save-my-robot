@@ -7,6 +7,7 @@ import {
   Flower2,
   Footprints,
   Hand,
+  Home as HomeIcon,
   Moon,
   Mountain,
   MoveHorizontal,
@@ -93,8 +94,8 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
   const [hud, setHud] = useState<Zone2HudState>(INITIAL_HUD);
   const [muted, setMuted] = useState(false);
   const [joy, setJoy] = useState<JoyState>({ active: false, ox: 0, oy: 0, dx: 0, dy: 0 });
-  const [cartValue, setCartValue] = useState(4);
-  const [calmValue, setCalmValue] = useState(55);
+  const [cartValue, setCartValue] = useState(1);
+  const [calmValue, setCalmValue] = useState(30);
   const joyRef = useRef<{ id: number; ox: number; oy: number; isJoy: boolean }>({
     id: -1,
     ox: 0,
@@ -286,7 +287,7 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
           </div>
 
           {/* quest card: icon + <=5 words */}
-          <div className="pointer-events-none fixed left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-black/35 px-4 py-2 backdrop-blur-sm">
+          <div className="pointer-events-none fixed left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-black/35 px-4 py-2 backdrop-blur-sm max-sm:left-auto max-sm:right-4 max-sm:top-[4.5rem] max-sm:translate-x-0">
             <QuestIcon className="h-6 w-6 text-cyan-300" />
             <div className="text-white">
               <div className="text-xs font-semibold uppercase tracking-wide text-cyan-200/80">
@@ -316,9 +317,19 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
             {muted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
           </button>
 
-          {/* hint bubble */}
+          {/* back to the zone picker — only in free play, so a stray tap can't lose a run */}
+          {onExit && hud.questIndex >= 7 && (
+            <button
+              onClick={onExit}
+              className="fixed right-20 top-4 z-30 flex items-center gap-1.5 rounded-full bg-black/35 px-4 py-3 text-sm font-black text-white backdrop-blur-sm transition-transform active:scale-90"
+            >
+              <HomeIcon className="h-5 w-5" /> Zones
+            </button>
+          )}
+
+          {/* hint bubble (sits above the calm panel while that is open) */}
           {hud.hint && (
-            <div className="pointer-events-none fixed bottom-28 left-1/2 z-20 -translate-x-1/2 animate-pulse rounded-2xl bg-cyan-400/95 px-5 py-2.5 text-center text-sm font-bold text-cyan-950 shadow-xl">
+            <div className={`pointer-events-none fixed ${hud.calmMode ? 'bottom-[17rem]' : 'bottom-28'} left-1/2 z-20 -translate-x-1/2 animate-pulse rounded-2xl bg-cyan-400/95 px-5 py-2.5 text-center text-sm font-bold text-cyan-950 shadow-xl`}>
               {hud.hint}
             </div>
           )}
@@ -389,10 +400,12 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
 
           {/* Flicker's Jitters: live startle meter vs the calm-threshold line */}
           {hud.calmMode && (
-            <div className="fixed bottom-6 left-1/2 z-30 w-[min(92vw,26rem)] -translate-x-1/2 rounded-3xl bg-black/45 p-4 backdrop-blur-sm">
+            <div className="fixed bottom-28 left-1/2 z-30 w-[min(92vw,26rem)] -translate-x-1/2 rounded-3xl bg-black/45 p-4 backdrop-blur-sm">
               <div className="mb-2 flex items-center gap-2 text-cyan-100">
                 <Cloud className="h-6 w-6" />
-                <span className="text-sm font-black">Flicker's calm line</span>
+                <span className="text-sm font-black">
+                  Flicker jumps when the bar passes the line ({Math.round(calmValue)})
+                </span>
               </div>
               <div className="relative mb-3 h-6 overflow-hidden rounded-full border-2 border-cyan-300/60 bg-slate-800/80">
                 <div
@@ -403,7 +416,7 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
                 <div
                   ref={calmLineRef}
                   className="absolute top-0 h-full w-1.5 -translate-x-1/2 bg-white shadow"
-                  style={{ left: '55%' }}
+                  style={{ left: '30%' }}
                 />
               </div>
               <input
@@ -432,13 +445,15 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
             <TramFront className="mx-auto h-10 w-10 text-cyan-600" />
             <h2 className="mt-2 text-2xl font-black text-cyan-900">Stop the cart!</h2>
             <p className="mt-1 text-sm font-semibold text-cyan-800">
-              Stop when closer than…
+              Brake so the cart stops on the <span className="font-black text-green-600">green</span> zone.
             </p>
-            <div className="mt-4 text-5xl font-black text-cyan-700">{cartValue} m</div>
+            <div className="mt-4 rounded-2xl bg-cyan-100 px-3 py-3 text-lg font-black text-cyan-900">
+              IF distance &lt; <span className="text-4xl text-cyan-700">{cartValue} m</span> → BRAKE
+            </div>
             <input
               type="range"
               min={1}
-              max={8}
+              max={12}
               step={1}
               value={cartValue}
               onChange={(ev) => {
@@ -451,7 +466,7 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
             />
             <div className="flex justify-between px-1 text-xs font-bold text-cyan-800/70">
               <span>1 m</span>
-              <span>8 m</span>
+              <span>12 m</span>
             </div>
             <button
               onClick={() => engineRef.current?.confirmCartSlider()}
@@ -513,12 +528,19 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
             <p className="mt-1 text-sm font-bold text-cyan-600">
               Vertical Slice complete — thanks for playing!
             </p>
-            <button
-              onClick={() => engineRef.current?.resumeFreePlay()}
-              className="mt-6 rounded-full bg-cyan-400 px-8 py-4 text-lg font-black text-cyan-950 shadow-xl transition-transform hover:scale-105 active:scale-95"
-            >
-              Keep exploring with scan-ping
-            </button>
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <button
+                onClick={() => engineRef.current?.resumeFreePlay()}
+                className="rounded-full bg-cyan-400 px-8 py-4 text-lg font-black text-cyan-950 shadow-xl transition-transform hover:scale-105 active:scale-95"
+              >
+                Keep exploring with scan-ping
+              </button>
+              {onExit && (
+                <button onClick={onExit} className="text-sm font-black text-cyan-800 underline">
+                  Back to zones
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

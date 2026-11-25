@@ -18,7 +18,7 @@ function zone2Unlocked(): boolean {
 export default function Home() {
   const [zone, setZone] = useState<null | 1 | 2>(null);
 
-  if (zone === 1) return <Zone1Game onExit={() => setZone(null)} />;
+  if (zone === 1) return <Zone1Game onExit={() => setZone(null)} onNext={() => setZone(2)} />;
   if (zone === 2) return <Zone2Game onExit={() => setZone(null)} />;
 
   const unlocked = zone2Unlocked();
