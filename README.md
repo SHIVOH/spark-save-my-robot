@@ -8,9 +8,21 @@ Bolt the robot is running out of charge. Explore an open world, harvest energy,
 wire real circuits, and learn how robots sense, think, and act — one quest at a
 time. Built for kids aged 6–14.
 
-## Status: Zones 1 and 2 playable
+## ▶ Play it now
 
-Tuned for ages 9–11 (numbers and sliders). Zone 1 — *Meadow of Beginnings* (power):
+**https://shivoh.github.io/spark-save-my-robot/** — runs right in your browser
+(desktop or phone), no install. Progress saves locally on your device.
+
+## Give feedback
+
+Played it? We'd love to hear from you — especially if you're a kid or
+played with one! Open a
+[playtest feedback issue](https://github.com/SHIVOH/spark-save-my-robot/issues/new)
+and tell us: what was fun, what was confusing, where you got stuck.
+
+## Status: Zones 1–2 playable
+
+Zone 1 — *Meadow of Beginnings* — energy and circuits:
 
 - **First Light** — follow the amber trail and charge the first flower
 - **Snack-Bar Hunt** — collect 5 charge cells scattered across the meadow
@@ -19,16 +31,14 @@ Tuned for ages 9–11 (numbers and sliders). Zone 1 — *Meadow of Beginnings* (
 - **Sunset Crossing** — predict your charge, carry the lantern, cross the gate
 - **Bolt's Reboot** — the ceremony, and a new move: **charge-dash**
 
-Zone 2 — *Sensor Gardens* (sensors), unlocked by finishing Zone 1:
+Zone 2 — *Sensor Gardens* — how robots sense the world (unlocks after Zone 1):
 
-- **Morning Bloom** — carry the light-globe to wake 5 flowers and grow a bridge
-- **Bat Hollow** — ping for distance, then set the brake rule for two minecarts
-- **Vine Crossing** — swing across the gorge on the vines that light up
-- **Flicker's Jitters** — set a threshold that ignores cloud shadows but catches dusk
-- **The Right Eyes** — fit the right sensor for each obstacle and predict its reading
+- **Morning Bloom** — analog light: flowers bloom by *how much* light they get
+- **Bat Hollow** — ultrasonic echolocation + a brake rule for two minecarts
+- **Vine Crossing** — binary touch: felt vine or not?
+- **Flicker's Jitters** — noise vs signal: tune out false positives
+- **The Right Eyes** — pick the right sensor for each obstacle
 - **Bolt's Eyes Open** — the ceremony, and a new move: **scan-ping**
-
-A playtest link is shared privately with testers during this phase.
 
 ## Run it locally
 
@@ -51,16 +61,13 @@ tap-to-move, dash button).
 ## Project layout
 
 ```
-src/game/engine.ts         # Zone 1 engine (+ shared rigs, particles, helpers)
-src/game/zone2/engine.ts   # Zone 2 engine
-src/game/audio.ts          # synthesized sound effects (zone2/audio.ts extends it)
-src/pages/Home.tsx         # zone picker
-src/pages/Zone1Game.tsx    # Zone 1 HUD + touch input layer
-src/pages/Zone2Game.tsx    # Zone 2 HUD + touch input layer
+src/game/engine.ts   # the whole game: quests, wiring, energy, companions
+src/game/audio.ts    # synthesized sound effects
+src/pages/Home.tsx   # React HUD + touch input layer
 ```
 
 ## Roadmap
 
-1. Playtest Zones 1–2 with kids, iterate on feedback
+1. Playtest Zones 1–2 with kids, iterate on feedback ← **we are here**
 2. Zones 3+ — new robotics concepts per the game design document
 3. Native iOS/Android build
