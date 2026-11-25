@@ -4,9 +4,10 @@ import { defineConfig } from "vite"
 import { inspectAttr } from 'plugin-inspect-react-code'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: './',
-  plugins: [inspectAttr(), react()],
+  // the inspector stamps source paths onto elements: dev server only, never in builds
+  plugins: [...(command === 'serve' ? [inspectAttr()] : []), react()],
   server: {
     port: 3000,
   },
@@ -15,4 +16,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));
