@@ -43,6 +43,7 @@ const DRAIN_SPRINT = 2.0; // sprinting drains faster than walking (canon)
 const DRAIN_IDLE = 0.02;
 const WORLD_RADIUS = 82; // playable clamp
 const GATE_MIN_CHARGE = 25; // sunset crossing: arrive with charge to spare
+const LANTERN_CHARGE = 40; // NOT a full tank — walking (4) fits easily, sprinting (16) just misses
 const TRAIL_IDLE_DELAY = 30; // s of no progress -> guidance trail fades in
 const HINT_IDLE_DELAY = 45; // s idle -> hint pulse
 
@@ -1045,8 +1046,8 @@ export class GameEngine {
   }
 
   answerPrediction(i: number) {
-    // 0 = plenty of charge (correct), 1 = just enough, 2 = not enough
-    if (i === 0) {
+    // 1 = just enough (correct — true IF you walk); 0 = plenty, 2 = not enough
+    if (i === 1) {
       this.predictionPassed = true;
       this.audio.stinger(3);
       this.setHud({ predictionOpen: false, hint: null, banner: 'Carry the light!' });
@@ -1057,7 +1058,12 @@ export class GameEngine {
     } else {
       // friendly, no punishment: Bolt tilts his head, hint re-opens the choice
       this.audio.chirp(false);
-      this.setHud({ hint: i === 1 ? 'Walking is cheaper than sprinting!' : 'The lantern is full — plenty!' });
+      this.setHud({
+        hint:
+          i === 0
+            ? 'Careful — it is a long way. Sprinting wastes spark!'
+            : 'It IS enough — walking beats sprinting!',
+      });
     }
   }
 
@@ -1415,7 +1421,7 @@ export class GameEngine {
 
   private takeLantern() {
     this.lanternCarried = true;
-    this.gauge = GAUGE_MAX; // the lantern tops you up for the crossing
+    this.gauge = LANTERN_CHARGE; // the lantern gives a modest fill — budgeting matters now
     this.audio.pickup();
     this.setHud({ lantern: true, banner: 'To the sunset gate!' });
     window.setTimeout(() => this.clearBanner(), 2000);

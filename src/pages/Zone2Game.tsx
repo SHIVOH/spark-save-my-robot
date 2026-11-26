@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import type { Zone2HudState } from '@/game/zone2/engine';
 import { Zone2Engine } from '@/game/zone2/engine';
+import BoltBadge from '@/components/BoltBadge';
 
 const QUEST_ICONS = [Footprints, Flower2, Radar, MoveHorizontal, Cloud, Eye, Sun, Sparkles];
 
@@ -526,7 +527,7 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
               you've unlocked the scan-ping!
             </p>
             <p className="mt-1 text-sm font-bold text-cyan-600">
-              Vertical Slice complete — thanks for playing!
+              Thanks for playing!
             </p>
             <div className="mt-6 flex flex-col items-center gap-3">
               <button
@@ -549,13 +550,14 @@ export default function Zone2Game({ onExit }: { onExit?: () => void }) {
       {!hud.started && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-slate-400 via-cyan-100 to-teal-100">
           <div className="text-center">
-            <div className="text-xs font-black uppercase tracking-[0.3em] text-cyan-700">
+            <BoltBadge className="mx-auto h-28 w-28 animate-bounce drop-shadow-lg" />
+            <div className="mt-3 text-xs font-black uppercase tracking-[0.3em] text-cyan-700">
               Sensor Gardens
             </div>
             <h1 className="mt-2 text-5xl font-black text-cyan-900 drop-shadow-sm">
               SPARK: Save My Robot
             </h1>
-            <p className="mt-2 text-lg font-bold text-cyan-800/80">Zone 2 Vertical Slice</p>
+            <p className="mt-2 text-lg font-bold text-cyan-800/80">Zone 2</p>
             <p className="mt-1 text-sm font-bold text-cyan-700/70">
               Bolt's eyes and ears are dark — wake his sensors!
             </p>

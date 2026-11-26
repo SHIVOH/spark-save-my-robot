@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { HudState } from '@/game/engine';
 import { GameEngine } from '@/game/engine';
+import BoltBadge from '@/components/BoltBadge';
 
 const QUEST_ICONS = [Sunrise, BatteryCharging, Cable, MapPin, Lightbulb, Sparkles, Zap];
 
@@ -353,7 +354,8 @@ export default function Zone1Game({ onExit, onNext }: { onExit?: () => void; onN
             <Lightbulb className="mx-auto h-10 w-10 text-amber-500" />
             <h2 className="mt-2 text-2xl font-black text-amber-900">The Sunset Crossing</h2>
             <p className="mt-1 text-sm font-semibold text-amber-800">
-              The lantern is full. Is that enough charge to reach the gate?
+              The lantern gives you some charge for the long walk to the gate. Will it be
+              enough?
             </p>
             <div className="mt-5 grid grid-cols-3 gap-3">
               <button
@@ -394,7 +396,7 @@ export default function Zone1Game({ onExit, onNext }: { onExit?: () => void; onN
               charge-dash!
             </p>
             <p className="mt-1 text-sm font-bold text-amber-600">
-              Vertical Slice complete — thanks for playing!
+              Thanks for playing!
             </p>
             <div className="mt-6 flex flex-col items-center gap-3">
               {onNext && (
@@ -425,13 +427,14 @@ export default function Zone1Game({ onExit, onNext }: { onExit?: () => void; onN
       {!hud.started && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-sky-300 via-emerald-100 to-amber-100">
           <div className="text-center">
-            <div className="text-xs font-black uppercase tracking-[0.3em] text-amber-700">
+            <BoltBadge className="mx-auto h-28 w-28 animate-bounce drop-shadow-lg" />
+            <div className="mt-3 text-xs font-black uppercase tracking-[0.3em] text-amber-700">
               Meadow of Beginnings
             </div>
             <h1 className="mt-2 text-5xl font-black text-amber-900 drop-shadow-sm">
               SPARK: Save My Robot
             </h1>
-            <p className="mt-2 text-lg font-bold text-amber-800/80">Zone 1 Vertical Slice</p>
+            <p className="mt-2 text-lg font-bold text-amber-800/80">Zone 1</p>
             {wasComplete && (
               <p className="mt-1 text-sm font-bold text-emerald-700">✓ Completed — play again!</p>
             )}
